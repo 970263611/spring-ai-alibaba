@@ -27,6 +27,8 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class LlmService {
 
@@ -50,7 +52,7 @@ public class LlmService {
 		// Execute and summarize planning, use the same memory
 		this.planningChatClient = ChatClient.builder(chatModel)
 			.defaultAdvisors(new SimpleLoggerAdvisor())
-			.defaultOptions(OpenAiChatOptions.builder().temperature(0.1).build())
+			.defaultOptions(chatModel.getDefaultOptions())
 			.build();
 
 		// Each agent execution process uses independent memory
@@ -58,7 +60,7 @@ public class LlmService {
 		this.agentExecutionClient = ChatClient.builder(chatModel)
 			// .defaultAdvisors(MessageChatMemoryAdvisor.builder(agentMemory).build())
 			.defaultAdvisors(new SimpleLoggerAdvisor())
-			.defaultOptions(OpenAiChatOptions.builder().internalToolExecutionEnabled(false).build())
+			.defaultOptions(chatModel.getDefaultOptions())
 			.build();
 
 		this.finalizeChatClient = ChatClient.builder(chatModel)
@@ -72,10 +74,11 @@ public class LlmService {
 		return agentExecutionClient;
 	}
 
-	public ChatClient getDynamicChatClient(String host, String apiKey, String modelName) {
+	public ChatClient getDynamicChatClient(String host, String apiKey, String modelName, Map<String,String> headers) {
 		OpenAiApi openAiApi = OpenAiApi.builder().baseUrl(host).apiKey(apiKey).build();
 
 		OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(modelName).build();
+		chatOptions.setHttpHeaders(headers);
 
 		OpenAiChatModel openAiChatModel = OpenAiChatModel.builder()
 			.openAiApi(openAiApi)
