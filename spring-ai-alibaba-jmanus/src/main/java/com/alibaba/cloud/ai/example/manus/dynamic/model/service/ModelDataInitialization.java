@@ -19,8 +19,13 @@ import com.alibaba.cloud.ai.example.manus.dynamic.model.entity.DynamicModelEntit
 import com.alibaba.cloud.ai.example.manus.dynamic.model.model.enums.ModelType;
 import com.alibaba.cloud.ai.example.manus.dynamic.model.repository.DynamicModelRepository;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 /**
  * @author lizhenning
@@ -35,8 +40,8 @@ public class ModelDataInitialization {
 	@Value("${spring.ai.openai.api-key}")
 	private String apiKey;
 
-	@Value("${spring.ai.openai.chat.options.model}")
-	private String model;
+	@Autowired
+	private Config config;
 
 	private final DynamicModelRepository repository;
 
@@ -48,13 +53,40 @@ public class ModelDataInitialization {
 	public void init() {
 		if (repository.count() == 0) {
 			DynamicModelEntity dynamicModelEntity = new DynamicModelEntity();
-			dynamicModelEntity.setBaseUrl(baseUrl);
-			dynamicModelEntity.setApiKey(apiKey);
-			dynamicModelEntity.setModelName(model);
+			dynamicModelEntity.setBaseUrl(this.baseUrl);
+			dynamicModelEntity.setHeaders(this.config.getHttpHeaders());
+			dynamicModelEntity.setApiKey(this.apiKey);
+			dynamicModelEntity.setModelName(this.config.getModel());
 			dynamicModelEntity.setModelDescription("base model");
 			dynamicModelEntity.setType(ModelType.GENERAL.name());
 			repository.save(dynamicModelEntity);
 		}
+	}
+
+	@ConfigurationProperties(prefix = "spring.ai.openai.chat.options")
+	@Component
+	public static class Config {
+
+		private String model;
+
+		private Map<String, String> httpHeaders;
+
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(String model) {
+			this.model = model;
+		}
+
+		public Map<String, String> getHttpHeaders() {
+			return httpHeaders;
+		}
+
+		public void setHttpHeaders(Map<String, String> httpHeaders) {
+			this.httpHeaders = httpHeaders;
+		}
+
 	}
 
 }

@@ -113,6 +113,7 @@ public class ModelServiceImpl implements ModelService {
 		if (StrUtil.isNotBlank(config.getApiKey()) && !config.getApiKey().contains("*")) {
 			entity.setApiKey(config.getApiKey());
 		}
+		entity.setHeaders(config.getHeaders());
 		entity.setBaseUrl(config.getBaseUrl());
 		entity.setModelName(config.getModelName());
 		entity.setModelDescription(config.getModelDescription());
